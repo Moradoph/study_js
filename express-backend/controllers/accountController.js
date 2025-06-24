@@ -14,7 +14,12 @@ class AccountController {
             console.log(`${req.method} ${req.originalUrl}`);
 
             const result = await this.service.getAll();
-            return res.status(200).json(result);
+            console.log(result);
+            const users = []
+            for (let user of result) {
+                users.push(getUserDTO(user));
+            }
+            return res.status(200).json(users);
         } catch (err) {
             return res.status(500).json({ message: err.message });
         }
