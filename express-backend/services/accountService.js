@@ -1,11 +1,13 @@
 import Account from "../models/Account.js";
-import encrypt from "../utils/encryption.js"
+import Encryption from "../utils/encryption.js"
 
 class AccountService {
     constructor() {
         this.db = Account;
     }
+
     /**
+     * get all users
      * @returns {Promise<Account[]>} users
      */
     async getAll() {
@@ -19,20 +21,24 @@ class AccountService {
     }
 
     /**
-     * 
+     * get one user by his ID
      * @param {_id} userId 
      * @returns {Account} user
      */
     async getUser(userId) {
         try {
             const user = await this.db.findOne({_id: userId});
-            return user;
+            if (!user) {
+                return { success: false, message: `User with id: ${userId} not found!`};
+            }
+            return { success: true, object: user };
         } catch (err) {
-            return [];
+            return { success: false, message: err.message };
         }
     }
+
     /**
-     * 
+     * create new user via registration
      * @param {String} name 
      * @param {String} username 
      * @param {String} password 
@@ -51,7 +57,7 @@ class AccountService {
             const user = new Account({
                 name,
                 username,
-                password: encrypt(password)
+                password: Encryption.encrypt(password)
             });
             console.log(user);
             await user.save();
@@ -61,7 +67,7 @@ class AccountService {
     }
 
     /**
-     * 
+     * add friend for user
      * @param {String} username1 
      * @param {String} username2 
      */
@@ -81,8 +87,8 @@ class AccountService {
             if (user1.friends.includes(user2._id)) {
                 throw new Error("FAILED: Both are already friends!")
             }
-            user1.friends.push(user2); 
-            user2.friends.push(user1);
+            user1.friends.push(user2._id); 
+            user2.friends.push(user1._id);
 
             await user1.save();
             console.log(`UPDATE: ${user1.username}'s friends list updated!`);
@@ -94,6 +100,50 @@ class AccountService {
         } catch (err) {
             console.log(err.message);
             return;
+        }
+    }
+
+    /**
+     * edit user data
+     * @param {Object} newUser 
+     * @returns 
+     */
+    async changeUserInfo(newUser) {
+        try {
+            const user = await this.db.findOne({ _id: newUser._id });
+            if (!user) {
+                return { success: false, message: `User not found`};
+            }
+
+            user.name = newUser.name;
+            user.username = newUser.username;
+            await user.save();
+
+            return { success: true, object: user };
+        } catch (err) {
+            return { success: false, message: err.message };
+        }
+    }
+
+    /**
+     * change user's password
+     * @param {String} newPassword 
+     * @param {String} userId 
+     * @returns 
+     */
+    async changeUserPassword(newPassword, userId) {
+        try {
+            const user = await this.db.findById(userId);
+            if (!user) {
+                return { success: false, message: `User not found`};
+            }
+
+            user.password = await Encryption.encrypt(newPassword);
+            await user.save();
+
+            return { success: true, object: user };
+        } catch (err) {
+            return { success: false, message: err.message };
         }
     }
 }

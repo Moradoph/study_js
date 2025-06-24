@@ -17,5 +17,7 @@ app.use(express.json()); // รองรับ json body
 app.use('/api/account', accountRoutes);
 
 app.listen(9095, () => {
-    console.log(`[SERVER] Server running on http://localhost:${process.env.PORT}`)
-})
+    console.log(`[SERVER] Server running on http://localhost:${process.env.PORT}`);
+    console.log(`[TESTING]`);
+    console.log(`- http://localhost:${process.env.PORT}/api/account/68591baf78a0d6a6c9174768`);
+});
